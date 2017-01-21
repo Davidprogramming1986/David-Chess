@@ -49,6 +49,12 @@ const PieceRookQueen = [ BOOL.FALSE, BOOL.FALSE, BOOL.FALSE, BOOL.FALSE, BOOL.TR
 const PieceBishopQueen = [ BOOL.FALSE, BOOL.FALSE, BOOL.FALSE, BOOL.TRUE, BOOL.FALSE, BOOL.TRUE, BOOL.FALSE, BOOL.FALSE, BOOL.FALSE, BOOL.TRUE, BOOL.FALSE, BOOL.TRUE, BOOL.FALSE ];
 const PieceSlides = [ BOOL.FALSE, BOOL.FALSE, BOOL.FALSE, BOOL.TRUE, BOOL.TRUE, BOOL.TRUE, BOOL.FALSE, BOOL.FALSE, BOOL.FALSE, BOOL.TRUE, BOOL.TRUE, BOOL.TRUE, BOOL.FALSE ];
 
+
+let KnDir = [-8, -19, -21, -12, 8, 19, 21, 12];
+let RkDir = [-1, -10, 1, 10];
+let BiDir = [-9, -11, 11, 9];
+let KiDir = [-1, -10, 1, 10, -9, -11, 11, 9];
+
 let PieceKeys = new Array(14 * 120);
 let SideKey;
 let CastleKeys = new Array(16);
@@ -72,3 +78,34 @@ function SQ120(sq64) {
 function PCEINDEX(pce, pceNum) {
 	return (pce * 10 + pceNum);
 }
+
+/*
+How the moves are going to be stored on a 32 bit binary:
+0000 0000 0000 0000 0000 0111 1111 -> From 0x7F
+0000 0000 0000 0011 1111 1000 0000 -> To >> 7, 0x7F
+0000 0000 0011 1100 0000 0000 0000 -> Captured >> 14, 0xF
+0000 0000 0100 0000 0000 0000 0000 -> EP 0X40000
+0000 0000 1000 0000 0000 0000 0000 -> Pawn Start 0x80000
+0000 1111 0000 0000 0000 0000 0000 -> Promoted Piece >> 20, 0xF;
+0001 0000 0000 0000 0000 0000 0000 -> Castle 0x1000000
+*/
+
+function MOVE(from, to captured, promoted, flag) {
+	return (from | (to << 7) | (captured << 14) | (promoted << 20) | flag);
+}
+
+function FROMSQ(m) { return (m & 0x7F); }
+function TOSQ(m) { return ((m>> 7) & 0x7F); }
+function CAPTURED(m) { return ((m >> 14) & 0x7F); }
+function PROMOTED(m) { return ((m >> 20) & 0x7F); }
+
+let MFLAGEP = 0x40000;
+let MFLAGPS = 0X80000;
+let MFLAGCA = 0x100000;
+
+let MFLAGCAP = 0x7C000;
+let MFLAGPROM = 0xF00000;
+
+let NOMOVE = 0;
+
+
